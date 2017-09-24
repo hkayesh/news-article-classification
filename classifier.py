@@ -28,7 +28,7 @@ class Classifier(object):
         self.utilities = Utilities()
         self.labels = LabelEncoder()
         # self.classifier_model = SGDClassifier()
-        self.classifier_model = svm.SVC(kernel='sigmoid')
+        self.classifier_model = svm.SVC(kernel='linear')
         # self.classifier_model = MultinomialNB()
         # self.classifier_model = RandomForestClassifier()
         # self.classifier_model = tree.DecisionTreeClassifier()
@@ -65,8 +65,8 @@ class Classifier(object):
         If verbose, this function will print out information to the command line.
         """
         # Label encode the targets
-        y = self.labels.fit_transform(y)
         X = self.utilities.convert_list_to_utf8(X)
+        y = self.labels.fit_transform(y)
         model= self._build(self.classifier_model, X, y)
         model.labels_ = self.labels
 
@@ -106,9 +106,9 @@ class Classifier(object):
         model = self._load_model()
 
         classes = model.labels_.classes_
-        predicted_class = model.predict(y_test)
+        predicted_classes = model.predict(y_test)
 
-        output_classes = [classes[class_id] for class_id in predicted_class]
+        output_classes = [classes[class_id] for class_id in predicted_classes]
 
         return output_classes
 

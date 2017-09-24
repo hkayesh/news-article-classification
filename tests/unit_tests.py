@@ -1,8 +1,11 @@
 import unittest
 import sys
-sys.path.append('/home/hmayun/PycharmProjects/test-project/')
+import json
 
+sys.path.append('/home/hmayun/PycharmProjects/test-project/')
 from classifier import Preprocessor, Classifier
+from api import Api
+
 
 class TestPreprocessor(unittest.TestCase):
 
@@ -20,19 +23,23 @@ class TestPreprocessor(unittest.TestCase):
         self.assertEqual(result, [['test', 'string'], ['second', 'string']])
 
 
-class testClassifier(unittest.TestCase):
+class TestClassifier(unittest.TestCase):
 
     def test_get_classifier_model(self):
         classifier = Classifier()
-        X = ['A test string', 'The second test string']
-        y = ['category-A', 'category-B']
+
+        business = "Israel looks to US for bank chiefIsrael has asked a US banker and former International Monetary Fund director to run its central bank.Stanley Fischer, vice chairman of banking giant Citigroup, has agreed to take the Bank of Israel job subject to approval from parliament and cabinet."
+        entertainment = "George Michael to perform for BBCGeorge Michael is to perform live at London's Abbey Road studios as part of a BBC Radio 2 special next month."
+        tech = "Doors open at biggest gadget fairThousands of technology lovers and industry experts have gathered in Las Vegas for the annual Consumer Electronics Show (CES)."
+        X = [business, entertainment, tech]
+        y = ['business', 'entertainment', 'tech']
+
         model = classifier.get_classifier_model(X, y)
         self.assertEqual(str(type(model)), "<class 'sklearn.pipeline.Pipeline'>")
 
-
     def test_train(self):
         classifier = Classifier()
-        classifier.training_file = 'news-dataset.csv'
+        classifier.training_file = 'bbc-dataset-500-rows.csv'
         model = classifier.train()
         self.assertEqual(str(type(model)), "<class 'sklearn.pipeline.Pipeline'>")
         with self.assertRaises(IOError):
@@ -41,15 +48,16 @@ class testClassifier(unittest.TestCase):
 
     def test_predict_category(self):
         classifier = Classifier()
-        y = ['A test string']
-        predicted_classes = classifier.predict_category(y)
+        X = ["Israel looks to US for bank chiefIsrael has asked a US banker and former International Monetary Fund director to run its central bank.Stanley Fischer, vice chairman of banking giant Citigroup, has agreed to take the Bank of Israel job subject to approval from parliament and cabinet."]
+        predicted_classes = classifier.predict_category(X)
         self.assertEqual(str(type(predicted_classes)), "<type 'list'>")
-        self.assertEqual(len(y), len(predicted_classes))
+        self.assertEqual(len(X), len(predicted_classes))
 
-        y = ['A test string.', 'The second test string.']
-        predicted_classes = classifier.predict_category(y)
+        X = ["Israel looks to US for bank chiefIsrael has asked a US banker and former International Monetary Fund director to run its central bank.Stanley Fischer, vice chairman of banking giant Citigroup, has agreed to take the Bank of Israel job subject to approval from parliament and cabinet.",
+             "George Michael to perform for BBCGeorge Michael is to perform live at London's Abbey Road studios as part of a BBC Radio 2 special next month."]
+        predicted_classes = classifier.predict_category(X)
         self.assertEqual(str(type(predicted_classes)), "<type 'list'>")
-        self.assertEqual(len(y), len(predicted_classes))
+        self.assertEqual(len(X), len(predicted_classes))
         with self.assertRaises(ValueError):
             classifier.predict_category([])
 
@@ -63,6 +71,26 @@ class testClassifier(unittest.TestCase):
         model_file = 'invalid_model.pickle'
         model = classifier.load_saved_model(model_file)
         self.assertEqual(model, None)
+
+
+class test_api(unittest.TestCase):
+
+    def test_make_prediction(self):
+        self.api = Api()
+
+        business = "Israel looks to US for bank chiefIsrael has asked a US banker and former International Monetary Fund director to run its central bank.Stanley Fischer, vice chairman of banking giant Citigroup, has agreed to take the Bank of Israel job subject to approval from parliament and cabinet."
+        entertainment = "George Michael to perform for BBCGeorge Michael is to perform live at London's Abbey Road studios as part of a BBC Radio 2 special next month."
+        tech = "Doors open at biggest gadget fairThousands of technology lovers and industry experts have gathered in Las Vegas for the annual Consumer Electronics Show (CES)."
+        articles = json.dumps([business, entertainment, tech])
+
+        response = self.api.make_prediction(articles)
+        self.assertIsNotNone(response)
+
+        list_from_json = json.loads(response)
+
+        self.assertEqual(len(list_from_json), 3)
+        with self.assertRaises(ValueError):
+            self.api.make_prediction([])
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,11 +1,20 @@
 from classifier import Classifier
 import json
 
-class Api():
+
+class Api:
     def __init__(self):
         self.classifier = Classifier()
 
     def make_prediction(self, texts):
+        if len(texts) < 1:
+            raise ValueError("Invalid json string.")
+
+        texts = json.loads(texts)
+
+        if str(type(texts)) != "<type 'list'>":
+            raise TypeError("Input must be a json array of string.")
+
         predictions = self.classifier.predict_category(texts)
 
         data = []
